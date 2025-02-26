@@ -1,1 +1,1 @@
-c.Spawner.args = ['--ServerApp.startup_script=/opt/config/ml_env.sh']
+c.Spawner.args = ['--ServerApp.startup_script=/opt/ml/ml_config.py']
