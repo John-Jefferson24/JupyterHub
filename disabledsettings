@@ -1,0 +1,30 @@
+"@jupyterlab/notebook-extension:toolbar": {
+  "kernelStatus": true,
+  "kernelName": true,
+  "executeButton": true,
+  "runningTotal": true,
+  "assistantButton": true,
+  "download": false,
+  "cellTypeDropdown": true,
+  "clipboard": true,
+  "clearAllOutputs": true
+},
+"@jupyterlab/docmanager-extension:download": {
+  "enabled": false
+},
+"@jupyterlab/docmanager-extension:toolbar-button": {
+  "enabled": false
+}
+
+{
+  "command": "docmanager:download",
+  "disabled": true
+},
+{
+  "command": "notebook:download",
+  "disabled": true
+},
+{
+  "command": "notebook:export-as",
+  "disabled": true
+}
