@@ -34,3 +34,14 @@ ENV PIP_INDEX_URL=http://your-local-pypi-mirror/simple \
 # Set correct permissions
 RUN chmod -R 755 /opt/ml && \
     chown -R jupyter:jupyter /opt/ml  # Adjust user if needed
+
+
+# Create IPython startup directory
+RUN mkdir -p /etc/ipython/profile_default/startup 
+
+# Copy our existing ML config file to the IPython startup directory
+COPY ml_config.py /etc/ipython/profile_default/startup/00-ml-config.py
+
+# Make sure permissions are correct
+RUN chmod 644 /etc/ipython/profile_default/startup/00-ml-config.py && \
+    chmod -R 755 /etc/ipython
