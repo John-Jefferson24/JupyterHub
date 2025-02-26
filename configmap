@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ml-env-config
+  labels:
+    app: jupyterhub
+    component: ml-config
+data:
+  # Base paths
+  LOCAL_MODELS_PATH: "/opt/ml/models"
+  LOCAL_DATASETS_PATH: "/opt/ml/datasets"
+  LOCAL_CACHE_PATH: "/opt/ml/cache"
+  LOCAL_PACKAGES_PATH: "/opt/ml/packages"
+  LOCAL_CONFIG_PATH: "/opt/ml/config"
+  
+  # Package and dependency management
+  PIP_INDEX_URL: "http://your-local-pypi-mirror/simple"
+  PIP_TRUSTED_HOST: "your-local-pypi-mirror"
+  PIP_NO_CACHE_DIR: "false"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  
+  # Hugging Face Ecosystem
+  TRANSFORMERS_OFFLINE: "1"
+  HF_DATASETS_OFFLINE: "1"
+  HF_HOME: "/opt/ml/cache/huggingface"
+  TRANSFORMERS_CACHE: "/opt/ml/models/transformers"
+  HF_DATASETS_CACHE: "/opt/ml/datasets/huggingface"
+  HUGGINGFACE_HUB_CACHE: "/opt/ml/cache/huggingface/hub"
+  HF_TRANSFER_DISABLE: "1"
+  TOKENIZERS_PARALLELISM: "true"
+  BITSANDBYTES_NOWELCOME: "1"
+  
+  # PyTorch Ecosystem
+  TORCH_HOME: "/opt/ml/models/torch"
+  TORCH_DATA_PATH: "/opt/ml/datasets/torch"
+  PYTORCH_UPDATE_CHECK: "0"
+  TORCH_EXTENSIONS_DIR: "/opt/ml/cache/torch_extensions"
+  TORCH_CUDNN_HOME: "/opt/ml/cache/cudnn"
+  
+  # TensorFlow Ecosystem
+  KERAS_HOME: "/opt/ml/cache/keras"
+  TF_CPP_MIN_LOG_LEVEL: "2"
+  TF_FORCE_GPU_ALLOW_GROWTH: "true"
+  TF_USE_LEGACY_KERAS: "0"
+  TF_ENABLE_ONEDNN_OPTS: "0"
+  
+  # JAX Ecosystem
+  JAX_PLATFORMS: "cpu,gpu"
+  XLA_FLAGS: "--xla_gpu_cuda_data_dir=/usr/local/cuda"
+  JAX_ENABLE_X64: "true"
+  JAX_TRACEBACK_FILTERING: "off"
+  
+  # ONNX Runtime
+  ORT_TENSORRT_CACHE_PATH: "/opt/ml/cache/tensorrt"
+  ORT_TENSORRT_ENGINE_CACHE_ENABLE: "1"
+  ORT_TENSORRT_FP16_ENABLE: "1"
+  
+  # Triton Inference Server
+  TRITON_CACHE_DIR: "/opt/ml/cache/triton"
+  TRITON_KERNEL_PATH: "/opt/ml/models/triton_kernels"
+  TRITON_SKIP_UPDATE_CHECK: "1"
+  TRITON_SERVER_URL: "localhost:8000"
+  
+  # LiteLLM
+  LITELLM_CACHE_PATH: "/opt/ml/cache/litellm"
+  LITELLM_MODEL_PATH: "/opt/ml/models/litellm"
+  LITELLM_TELEMETRY: "false"
+  LITELLM_CONFIG_PATH: "/opt/ml/config/litellm_config.yaml"
+  
+  # Text Generation Inference
+  TGI_CACHE_DIR: "/opt/ml/cache/tgi"
+  TGI_OFFLINE: "1"
+  
+  # vLLM
+  VLLM_CACHE_DIR: "/opt/ml/cache/vllm"
+  VLLM_MODEL_DIR: "/opt/ml/models/vllm"
+  
+  # DeepSpeed
+  DEEPSPEED_CONFIG_PATH: "/opt/ml/config/deepspeed_config.json"
+  DEEPSPEED_CACHE_PATH: "/opt/ml/cache/deepspeed"
+  CUDA_CACHE_DISABLE: "0"
+  CUDA_MODULE_LOADING: "LAZY"
+  
+  # Ray
+  RAY_HOME: "/opt/ml/cache/ray"
+  RAY_OBJECT_STORE_ALLOW_SLOW_STORAGE: "1"
+  RAY_DISABLE_DOCKER_CPU_WARNING: "1"
+  
+  # MLflow
+  MLFLOW_TRACKING_URI: "file:///opt/ml/models/mlflow"
+  MLFLOW_REGISTRY_URI: "file:///opt/ml/models/mlflow/registry"
+  MLFLOW_TRACKING_INSECURE_TLS: "true"
+  
+  # Weights & Biases
+  WANDB_MODE: "offline"
+  WANDB_CACHE_DIR: "/opt/ml/cache/wandb"
+  WANDB_SILENT: "true"
+  
+  # DVC (Data Version Control)
+  DVC_DIR: "/opt/ml/cache/dvc"
+  DVC_CACHE_DIR: "/opt/ml/cache/dvc/cache"
+  DVC_NO_ANALYTICS: "1"
+  
+  # Scikit-learn
+  SKLEARN_DATA_HOME: "/opt/ml/datasets/scikit-learn"
+  JOBLIB_CACHE_DIR: "/opt/ml/cache/joblib"
+  JOBLIB_TEMP_FOLDER: "/opt/ml/cache/joblib_temp"
+  
+  # SciPy & NumPy
+  NPY_DISTUTILS_APPEND_FLAGS: "1"
+  OPENBLAS_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  OMP_NUM_THREADS: "4"
+  
+  # GPU Configuration
+  CUDA_CACHE_PATH: "/opt/ml/cache/cuda"
+  NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+  NVIDIA_VISIBLE_DEVICES: "all"
+  
+  # Other settings
+  TOKENIZERS_PARALLELISM: "true"
+  PYTHONIOENCODING: "utf-8"
+  PYTHONHASHSEED: "42"
+  MPLCONFIGDIR: "/opt/ml/cache/matplotlib"
