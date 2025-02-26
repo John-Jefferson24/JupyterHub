@@ -1,123 +1,203 @@
-# ml_offline_config.py
-# Handles ML framework configs and offline settings only
+# ml_config.py - Complete ML Environment Configuration
+# Import this file at the start of notebooks/sessions
+# Usage: import ml_config
+
 import os
 import sys
+import json
 from pathlib import Path
 
-# Base paths - adjust according to your environment
+# Base paths - adjust these according to your environment
 LOCAL_MODELS_PATH = '/opt/ml/models'
 LOCAL_DATASETS_PATH = '/opt/ml/datasets'
 LOCAL_CACHE_PATH = '/opt/ml/cache'
 LOCAL_PACKAGES_PATH = '/opt/ml/packages'
+LOCAL_CONFIG_PATH = '/opt/ml/config'
 
-# Create directories if they don't exist
-for path in [LOCAL_MODELS_PATH, LOCAL_DATASETS_PATH, LOCAL_CACHE_PATH, LOCAL_PACKAGES_PATH]:
-    Path(path).mkdir(parents=True, exist_ok=True)
+def configure_ml_environment():
+    """Configure all ML frameworks for offline/local usage"""
+    # Ensure directories exist
+    for path in [LOCAL_MODELS_PATH, LOCAL_DATASETS_PATH, LOCAL_CACHE_PATH, 
+                LOCAL_PACKAGES_PATH, LOCAL_CONFIG_PATH]:
+        Path(path).mkdir(parents=True, exist_ok=True)
+        os.environ[path.split('/')[-1].upper() + '_PATH'] = path
+    
+    # Add local packages to Python path
+    if LOCAL_PACKAGES_PATH not in sys.path:
+        sys.path.append(LOCAL_PACKAGES_PATH)
+    
+    # Dictionary of all environment variables to set
+    env_vars = {
+        #=== Package and Dependency Management ===
+        # PyPI Configuration
+        'PIP_INDEX_URL': 'http://your-local-pypi-mirror/simple',
+        'PIP_TRUSTED_HOST': 'your-local-pypi-mirror',
+        'PIP_NO_CACHE_DIR': 'false',
+        'PIP_DISABLE_PIP_VERSION_CHECK': '1',
+        
+        #=== Hugging Face Ecosystem ===
+        'TRANSFORMERS_OFFLINE': '1',
+        'HF_DATASETS_OFFLINE': '1',
+        'HF_HOME': os.path.join(LOCAL_CACHE_PATH, 'huggingface'),
+        'TRANSFORMERS_CACHE': os.path.join(LOCAL_MODELS_PATH, 'transformers'),
+        'HF_DATASETS_CACHE': os.path.join(LOCAL_DATASETS_PATH, 'huggingface'),
+        'HUGGINGFACE_HUB_CACHE': os.path.join(LOCAL_CACHE_PATH, 'huggingface/hub'),
+        'HF_TRANSFER_DISABLE': '1',  # Disable accelerated downloads
+        'TOKENIZERS_PARALLELISM': 'true',
+        'BITSANDBYTES_NOWELCOME': '1',  # Disable welcome message
+        
+        #=== PyTorch Ecosystem ===
+        'TORCH_HOME': os.path.join(LOCAL_MODELS_PATH, 'torch'),
+        'TORCH_DATA_PATH': os.path.join(LOCAL_DATASETS_PATH, 'torch'),
+        'PYTORCH_UPDATE_CHECK': '0',
+        'TORCH_EXTENSIONS_DIR': os.path.join(LOCAL_CACHE_PATH, 'torch_extensions'),
+        'TORCH_CUDNN_HOME': os.path.join(LOCAL_CACHE_PATH, 'cudnn'),
+        
+        #=== TensorFlow Ecosystem ===
+        'KERAS_HOME': os.path.join(LOCAL_CACHE_PATH, 'keras'),
+        'TF_CPP_MIN_LOG_LEVEL': '2',  # Reduce TF verbosity
+        'TF_FORCE_GPU_ALLOW_GROWTH': 'true',
+        'TF_USE_LEGACY_KERAS': '0',  # Use Keras integrated in TF
+        'TF_ENABLE_ONEDNN_OPTS': '0',
+        
+        #=== JAX Ecosystem ===
+        'JAX_PLATFORMS': 'cpu,gpu',
+        'XLA_FLAGS': '--xla_gpu_cuda_data_dir=/usr/local/cuda',
+        'JAX_ENABLE_X64': 'true',
+        'JAX_TRACEBACK_FILTERING': 'off',
+        
+        #=== ONNX Runtime ===
+        'ORT_TENSORRT_CACHE_PATH': os.path.join(LOCAL_CACHE_PATH, 'tensorrt'),
+        'ORT_TENSORRT_ENGINE_CACHE_ENABLE': '1',
+        'ORT_TENSORRT_FP16_ENABLE': '1',
+        
+        #=== Triton Inference Server ===
+        'TRITON_CACHE_DIR': os.path.join(LOCAL_CACHE_PATH, 'triton'),
+        'TRITON_KERNEL_PATH': os.path.join(LOCAL_MODELS_PATH, 'triton_kernels'),
+        'TRITON_SKIP_UPDATE_CHECK': '1',
+        'TRITON_SERVER_URL': 'localhost:8000',
+        
+        #=== LLM Tools ===
+        # LiteLLM
+        'LITELLM_CACHE_PATH': os.path.join(LOCAL_CACHE_PATH, 'litellm'),
+        'LITELLM_MODEL_PATH': os.path.join(LOCAL_MODELS_PATH, 'litellm'),
+        'LITELLM_TELEMETRY': 'false',
+        'LITELLM_CONFIG_PATH': os.path.join(LOCAL_CONFIG_PATH, 'litellm_config.yaml'),
+        
+        # Text Generation Inference
+        'TGI_CACHE_DIR': os.path.join(LOCAL_CACHE_PATH, 'tgi'),
+        'TGI_OFFLINE': '1',
+        
+        # vLLM
+        'VLLM_CACHE_DIR': os.path.join(LOCAL_CACHE_PATH, 'vllm'),
+        'VLLM_MODEL_DIR': os.path.join(LOCAL_MODELS_PATH, 'vllm'),
+        
+        #=== Distributed Training ===
+        # DeepSpeed
+        'DEEPSPEED_CONFIG_PATH': os.path.join(LOCAL_CONFIG_PATH, 'deepspeed_config.json'),
+        'DEEPSPEED_CACHE_PATH': os.path.join(LOCAL_CACHE_PATH, 'deepspeed'),
+        'CUDA_CACHE_DISABLE': '0',
+        'CUDA_MODULE_LOADING': 'LAZY',
+        
+        # Ray
+        'RAY_HOME': os.path.join(LOCAL_CACHE_PATH, 'ray'),
+        'RAY_OBJECT_STORE_ALLOW_SLOW_STORAGE': '1',
+        'RAY_DISABLE_DOCKER_CPU_WARNING': '1',
+        
+        #=== Data Science & ML Ops ===
+        # MLflow
+        'MLFLOW_TRACKING_URI': f'file://{os.path.join(LOCAL_MODELS_PATH, "mlflow")}',
+        'MLFLOW_REGISTRY_URI': f'file://{os.path.join(LOCAL_MODELS_PATH, "mlflow/registry")}',
+        'MLFLOW_TRACKING_INSECURE_TLS': 'true',
+        
+        # Weights & Biases
+        'WANDB_MODE': 'offline',
+        'WANDB_CACHE_DIR': os.path.join(LOCAL_CACHE_PATH, 'wandb'),
+        'WANDB_SILENT': 'true',
+        
+        # DVC (Data Version Control)
+        'DVC_DIR': os.path.join(LOCAL_CACHE_PATH, 'dvc'),
+        'DVC_CACHE_DIR': os.path.join(LOCAL_CACHE_PATH, 'dvc/cache'),
+        'DVC_NO_ANALYTICS': '1',
+        
+        #=== Data Science Libraries ===
+        # Scikit-learn
+        'SKLEARN_DATA_HOME': os.path.join(LOCAL_DATASETS_PATH, 'scikit-learn'),
+        'JOBLIB_CACHE_DIR': os.path.join(LOCAL_CACHE_PATH, 'joblib'),
+        'JOBLIB_TEMP_FOLDER': os.path.join(LOCAL_CACHE_PATH, 'joblib_temp'),
+        
+        # SciPy & NumPy
+        'NPY_DISTUTILS_APPEND_FLAGS': '1',
+        'OPENBLAS_NUM_THREADS': '4',  # Adjust based on system
+        'MKL_NUM_THREADS': '4',       # Adjust based on system
+        'OMP_NUM_THREADS': '4',       # Adjust based on system
+        
+        #=== GPU Configuration ===
+        'CUDA_CACHE_PATH': os.path.join(LOCAL_CACHE_PATH, 'cuda'),
+        'NVIDIA_DRIVER_CAPABILITIES': 'compute,utility',
+        'NVIDIA_VISIBLE_DEVICES': 'all',
+        
+        #=== Other Library-specific settings ===
+        'TOKENIZERS_PARALLELISM': 'true',
+        'PYTHONIOENCODING': 'utf-8',
+        'PYTHONHASHSEED': '42',  # For reproducibility
+        'MPLCONFIGDIR': os.path.join(LOCAL_CACHE_PATH, 'matplotlib')
+    }
+    
+    # Set environment variables
+    for name, value in env_vars.items():
+        os.environ[name] = value
+    
+    # Create default config files if they don't exist
+    config_files = {
+        'litellm_config.yaml': 'model_configs: {}',
+        'deepspeed_config.json': '{}'
+    }
+    
+    for filename, content in config_files.items():
+        filepath = os.path.join(LOCAL_CONFIG_PATH, filename)
+        if not os.path.exists(filepath):
+            with open(filepath, 'w') as f:
+                f.write(content)
+    
+    # Save current environment to a JSON file for inspection
+    env_file = os.path.join(LOCAL_CONFIG_PATH, 'current_env.json')
+    try:
+        with open(env_file, 'w') as f:
+            json.dump({k: v for k, v in dict(os.environ).items() if not k.startswith('_')}, f, indent=2)
+    except Exception:
+        pass
+    
+    return True
 
-# Add local packages to Python path
-sys.path.append(LOCAL_PACKAGES_PATH)
-
-# ============= Package Mirror Configuration =============
-os.environ['PIP_INDEX_URL'] = 'http://your-local-pypi-mirror/simple'
-os.environ['PIP_TRUSTED_HOST'] = 'your-local-pypi-mirror'
-
-# ============= Hugging Face Configuration =============
-os.environ['TRANSFORMERS_OFFLINE'] = '1'
-os.environ['HF_DATASETS_OFFLINE'] = '1'
-os.environ['HF_HOME'] = os.path.join(LOCAL_CACHE_PATH, 'huggingface')
-os.environ['TRANSFORMERS_CACHE'] = os.path.join(LOCAL_MODELS_PATH, 'transformers')
-os.environ['HF_DATASETS_CACHE'] = os.path.join(LOCAL_DATASETS_PATH, 'huggingface')
-
-# ============= PyTorch Configuration =============
-os.environ['TORCH_HOME'] = os.path.join(LOCAL_MODELS_PATH, 'torch')
-os.environ['TORCH_DATA_PATH'] = os.path.join(LOCAL_DATASETS_PATH, 'torch')
-os.environ['PYTORCH_UPDATE_CHECK'] = '0'
-
-# ============= TensorFlow Configuration =============
-os.environ['KERAS_HOME'] = os.path.join(LOCAL_CACHE_PATH, 'keras')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-
-# ============= JAX Configuration =============
-os.environ['JAX_PLATFORMS'] = 'cpu,gpu'
-os.environ['XLA_FLAGS'] = '--xla_gpu_cuda_data_dir=/usr/local/cuda'
-
-# ============= Scipy/Numpy Configuration =============
-os.environ['NPY_DISTUTILS_APPEND_FLAGS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-
-# ============= MLflow Configuration =============
-os.environ['MLFLOW_TRACKING_URI'] = 'file:///opt/ml/mlflow'
-os.environ['MLFLOW_REGISTRY_URI'] = 'file:///opt/ml/mlflow/registry'
-
-# ============= Weights & Biases Configuration =============
-os.environ['WANDB_MODE'] = 'offline'
-os.environ['WANDB_CACHE_DIR'] = os.path.join(LOCAL_CACHE_PATH, 'wandb')
-
-# ============= Triton Configuration =============
-os.environ['TRITON_CACHE_DIR'] = os.path.join(LOCAL_CACHE_PATH, 'triton')
-os.environ['TRITON_KERNEL_PATH'] = os.path.join(LOCAL_MODELS_PATH, 'triton_kernels')
-# Disable Triton auto-update
-os.environ['TRITON_SKIP_UPDATE_CHECK'] = '1'
-# Local Triton server settings (if running locally)
-os.environ['TRITON_SERVER_URL'] = 'localhost:8000'
-
-# ============= LiteLLM Configuration =============
-os.environ['LITELLM_CACHE_PATH'] = os.path.join(LOCAL_CACHE_PATH, 'litellm')
-os.environ['LITELLM_MODEL_PATH'] = os.path.join(LOCAL_MODELS_PATH, 'litellm')
-# Disable telemetry
-os.environ['LITELLM_TELEMETRY'] = 'false'
-# Local model configs
-os.environ['LITELLM_CONFIG_PATH'] = '/opt/ml/config/litellm_config.yaml'
-
-# ============= ONNX Runtime Configuration =============
-os.environ['ORT_TENSORRT_CACHE_PATH'] = os.path.join(LOCAL_CACHE_PATH, 'tensorrt')
-os.environ['ORT_TENSORRT_ENGINE_CACHE_ENABLE'] = '1'
-os.environ['ORT_TENSORRT_FP16_ENABLE'] = '1'
-
-# ============= DeepSpeed Configuration =============
-os.environ['DEEPSPEED_CONFIG_PATH'] = '/opt/ml/config/deepspeed_config.json'
-os.environ['DEEPSPEED_CACHE_PATH'] = os.path.join(LOCAL_CACHE_PATH, 'deepspeed')
-
-# ============= Ray Configuration =============
-os.environ['RAY_HOME'] = os.path.join(LOCAL_CACHE_PATH, 'ray')
-os.environ['RAY_OBJECT_STORE_ALLOW_SLOW_STORAGE'] = '1'
-os.environ['RAY_DISABLE_DOCKER_CPU_WARNING'] = '1'
-
-# ============= DVC (Data Version Control) Configuration =============
-os.environ['DVC_DIR'] = os.path.join(LOCAL_CACHE_PATH, 'dvc')
-os.environ['DVC_CACHE_DIR'] = os.path.join(LOCAL_CACHE_PATH, 'dvc/cache')
-
-# ============= Scikit-learn Configuration =============
-os.environ['SKLEARN_DATA_HOME'] = os.path.join(LOCAL_DATASETS_PATH, 'scikit-learn')
-
-# Verification function
-def verify_offline_setup():
-    """Verify that all necessary directories exist and permissions are correct"""
+def verify_configuration():
+    """Verify that the ML environment is correctly configured"""
+    # Check critical paths
     paths_to_check = [
         LOCAL_MODELS_PATH,
         LOCAL_DATASETS_PATH,
         LOCAL_CACHE_PATH,
         LOCAL_PACKAGES_PATH,
-        os.path.join(LOCAL_CACHE_PATH, 'triton'),
-        os.path.join(LOCAL_MODELS_PATH, 'triton_kernels'),
-        os.path.join(LOCAL_CACHE_PATH, 'litellm'),
-        os.path.join(LOCAL_MODELS_PATH, 'litellm'),
-        os.path.join(LOCAL_CACHE_PATH, 'tensorrt'),
-        os.path.join(LOCAL_CACHE_PATH, 'deepspeed'),
-        os.path.join(LOCAL_CACHE_PATH, 'ray'),
-        os.path.join(LOCAL_CACHE_PATH, 'dvc'),
-        os.path.join(LOCAL_CACHE_PATH, 'dvc/cache'),
-        '/opt/ml/config'  # For configuration files
+        LOCAL_CONFIG_PATH
     ]
     
-    for path in paths_to_check:
-        if not os.path.exists(path):
-            print(f"Warning: Required path does not exist: {path}")
-        elif not os.access(path, os.W_OK):
-            print(f"Warning: No write permission for path: {path}")
-        else:
-            print(f"Path verified: {path}")
+    missing_paths = [p for p in paths_to_check if not os.path.exists(p)]
+    
+    # Check critical environment variables
+    critical_vars = [
+        "PIP_INDEX_URL",
+        "TRANSFORMERS_OFFLINE",
+        "HF_DATASETS_OFFLINE",
+        "TORCH_HOME",
+        "KERAS_HOME",
+        "MLFLOW_TRACKING_URI",
+        "WANDB_MODE"
+    ]
+    
+    missing_vars = [v for v in critical_vars if v not in os.environ]
+    
+    return not missing_paths and not missing_vars
 
-if __name__ == "__main__":
-    verify_offline_setup()
+# Auto-execute on import
+configure_ml_environment()
+verify_configuration()
