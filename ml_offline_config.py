@@ -19,8 +19,13 @@ def configure_ml_environment():
     # Ensure directories exist
     for path in [LOCAL_MODELS_PATH, LOCAL_DATASETS_PATH, LOCAL_CACHE_PATH, 
                 LOCAL_PACKAGES_PATH, LOCAL_CONFIG_PATH]:
-        Path(path).mkdir(parents=True, exist_ok=True)
-        os.environ[path.split('/')[-1].upper() + '_PATH'] = path
+        try:
+            Path(path).mkdir(parents=True, exist_ok=True)
+            os.environ[path.split('/')[-1].upper() + '_PATH'] = path
+        except PermissionError:
+            # Still set the environment variable even if we can't create the directory
+            os.environ[path.split('/')[-1].upper() + '_PATH'] = path
+            pass
     
     # Add local packages to Python path
     if LOCAL_PACKAGES_PATH not in sys.path:
@@ -155,17 +160,22 @@ def configure_ml_environment():
     }
     
     for filename, content in config_files.items():
-        filepath = os.path.join(LOCAL_CONFIG_PATH, filename)
-        if not os.path.exists(filepath):
-            with open(filepath, 'w') as f:
-                f.write(content)
+        try:
+            filepath = os.path.join(LOCAL_CONFIG_PATH, filename)
+            if not os.path.exists(filepath):
+                with open(filepath, 'w') as f:
+                    f.write(content)
+        except (PermissionError, IOError):
+            # Continue even if we can't create the config files
+            pass
     
     # Save current environment to a JSON file for inspection
-    env_file = os.path.join(LOCAL_CONFIG_PATH, 'current_env.json')
     try:
+        env_file = os.path.join(LOCAL_CONFIG_PATH, 'current_env.json')
         with open(env_file, 'w') as f:
             json.dump({k: v for k, v in dict(os.environ).items() if not k.startswith('_')}, f, indent=2)
-    except Exception:
+    except (PermissionError, IOError):
+        # Continue even if we can't save the environment
         pass
     
     return True
