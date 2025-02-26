@@ -1,0 +1,1 @@
+c.Spawner.args = ['--NotebookApp.startup_script=/opt/config/ml_env.sh']
