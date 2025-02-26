@@ -1,7 +1,8 @@
 # ML Framework offline setup
-RUN mkdir -p /opt/ml/{models,datasets,cache,packages,mlflow,config} \
-    /opt/ml/cache/{triton,litellm,tensorrt,deepspeed,ray,dvc,dvc/cache} \
-    /opt/ml/models/{triton_kernels,litellm}
+RUN mkdir -p /opt/ml/{models,datasets,cache,packages,config,mlflow,mlflow/registry} \
+    /opt/ml/cache/{huggingface,huggingface/hub,torch_extensions,cudnn,keras,tensorrt,triton,litellm,tgi,vllm,deepspeed,ray,dvc,dvc/cache,wandb,joblib,joblib_temp,cuda,matplotlib} \
+    /opt/ml/models/{transformers,torch,triton_kernels,litellm,vllm} \
+    /opt/ml/datasets/{huggingface,torch,scikit-learn}
 
 # Create default config files
 RUN echo "{}" > /opt/ml/config/deepspeed_config.json && \
